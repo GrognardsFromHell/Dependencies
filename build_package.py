@@ -43,7 +43,7 @@ def extract_zlib(build_dir, include_dir, lib_dir):
 def extract_pybind11(build_dir, include_dir, lib_dir):
     print("Adding pybind11")
 
-    shutil.unpack_archive("pybind11-2.2.1.zip", str(build_dir))
+    shutil.unpack_archive("pybind11-1.7.tar.gz", str(build_dir))
     pybind_dir = next(build_dir.glob("pybind11-*"))
     shutil.copytree(pybind_dir.joinpath("include/pybind11"), include_dir.joinpath("pybind11"))
 

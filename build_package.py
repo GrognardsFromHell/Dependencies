@@ -110,7 +110,7 @@ def build_openssl(build_dir, include_dir, lib_dir):
 
     # Extract nasm
     shutil.unpack_archive("nasm-2.13.02-win32.zip", str(build_dir))
-    nasm_dir = next(build_dir.glob("nasm-*"))   
+    nasm_dir = next(build_dir.glob("nasm-*")).resolve()
     os.environ["PATH"] = f'"{nasm_dir}";' + os.environ["PATH"]
 
     subprocess.run(["perl", "Configure", "no-tests", "VC-WIN32"], check=True, cwd=str(openssl_dir))

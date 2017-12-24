@@ -62,7 +62,7 @@ def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir):
 def build_libjpegturbo(build_dir, include_dir, lib_dir):
     print("Building libjpeg-turbo")
     shutil.unpack_archive("libjpeg-turbo-1.5.3.tar.gz", str(build_dir))
-    jpeg_dir = next(build_dir.glob("libjpeg-turbo-*"))
+    jpeg_dir = next(build_dir.glob("libjpeg-turbo-*")).resolve()
 
     # Modify CMakeLists.txt to get separate .lib naming for debug/release and also get a pdb file for the static library
     with jpeg_dir.joinpath("CMakeLists.txt").open("at") as fh:
@@ -106,7 +106,7 @@ def build_openssl(build_dir, include_dir, lib_dir):
     print("Building OpenSSL")
     # Keep in mind to update the OPENSSL_V property below as well
     shutil.unpack_archive("openssl-1.0.2n.tar.gz", str(build_dir))
-    openssl_dir = next(build_dir.glob("openssl-*"))
+    openssl_dir = next(build_dir.glob("openssl-*")).resolve()
 
     # Extract nasm
     shutil.unpack_archive("nasm-2.13.02-win32.zip", str(build_dir))
@@ -129,7 +129,7 @@ def build_python(build_dir, include_dir, lib_dir, target_dir):
 
     print("Building Python")
     shutil.unpack_archive("Python-2.7.14.tar.xz", str(build_dir))
-    python_dir = next(build_dir.glob("Python-*"))
+    python_dir = next(build_dir.glob("Python-*")).resolve()
     python_build_dir = python_dir.joinpath("PCbuild")
 
     # Apply the patch fixing several compilation problems with never VS versions and

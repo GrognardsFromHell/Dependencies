@@ -22,12 +22,16 @@ def build_package():
     lib_dir = target_dir.joinpath("lib")
     lib_dir.mkdir()
 
-    #extract_zlib(build_dir, include_dir, lib_dir)
-    #extract_pybind11(build_dir, include_dir, lib_dir)
-    #extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir)
-    build_minhook(build_dir, include_dir, lib_dir)
-    #build_libjpegturbo(build_dir, include_dir, lib_dir)
-    #build_python(build_dir, include_dir, lib_dir, target_dir)
+    licenses_dir = target_dir.joinpath("licenses")
+    licenses_dir.mkdir()
+
+    extract_zlib(build_dir, include_dir, lib_dir)
+    extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir)
+    extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir)
+    build_minhook(build_dir, include_dir, lib_dir, licenses_dir)
+    build_googletest(build_dir, include_dir, lib_dir, licenses_dir)
+    build_libjpegturbo(build_dir, include_dir, lib_dir, licenses_dir)
+    build_python(build_dir, include_dir, lib_dir, target_dir, licenses_dir)
 
     # Compress dependencies archive using 7z (no 7z archive support)
     print("Compressing dependencies")
@@ -41,14 +45,16 @@ def extract_zlib(build_dir, include_dir, lib_dir):
     for filename in ["zconf.h", "zlib.h"]:
         shutil.copy(zlib_dir.joinpath(filename), include_dir)
 
-def extract_pybind11(build_dir, include_dir, lib_dir):
+def extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir):
     print("Adding pybind11")
 
     shutil.unpack_archive("pybind11-1.7.tar.gz", str(build_dir))
-    pybind_dir = next(build_dir.glob("pybind11-*"))
-    shutil.copytree(pybind_dir.joinpath("include/pybind11"), include_dir.joinpath("pybind11"))
+    src_dir = next(build_dir.glob("pybind11-*"))
+    shutil.copytree(src_dir.joinpath("include/pybind11"), include_dir.joinpath("pybind11"))
 
-def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir):
+    shutil.copy(src_dir.joinpath("LICENSE"), licenses_dir.joinpath("pybind11.txt"))
+
+def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir):
     print("Adding ffmpeg")
     shutil.unpack_archive("ffmpeg-3.4.1-win32-dev.zip", str(build_dir))
     dev_dir = next(build_dir.glob("ffmpeg-*-dev"))
@@ -60,7 +66,10 @@ def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir):
     shared_dir = next(build_dir.glob("ffmpeg-*-shared"))
     copy_tree(str(shared_dir.joinpath("bin")), str(target_dir.joinpath("bin")))
 
-def build_minhook(build_dir, include_dir, lib_dir):
+    shutil.copy(dev_dir.joinpath("LICENSE.txt"), licenses_dir.joinpath("ffmpeg-license.txt"))
+    shutil.copy(dev_dir.joinpath("README.txt"), licenses_dir.joinpath("ffmpeg-readme.txt"))
+
+def build_minhook(build_dir, include_dir, lib_dir, licenses_dir):
     print("Building minhook")
     shutil.unpack_archive("minhook-1.3.3.tar.gz", str(build_dir))
     src_dir = next(build_dir.glob("minhook-*")).resolve()
@@ -94,7 +103,9 @@ def build_minhook(build_dir, include_dir, lib_dir):
     shutil.copy(src_dir.joinpath("src/hde/pstdint.h"), hde_dir)
     shutil.copy(src_dir.joinpath("src/trampoline.h"), include_dir)
 
-def build_libjpegturbo(build_dir, include_dir, lib_dir):
+    shutil.copy(src_dir.joinpath("LICENSE.txt"), licenses_dir.joinpath("minhook.txt"))
+
+def build_libjpegturbo(build_dir, include_dir, lib_dir, licenses_dir):
     print("Building libjpeg-turbo")
     shutil.unpack_archive("libjpeg-turbo-1.5.3.tar.gz", str(build_dir))
     jpeg_dir = next(build_dir.glob("libjpeg-turbo-*")).resolve()
@@ -137,7 +148,38 @@ def build_libjpegturbo(build_dir, include_dir, lib_dir):
     for lib_file in install_dir.joinpath("lib").glob("turbo*"):
         shutil.copy(lib_file, lib_dir)
 
-def build_openssl(build_dir, include_dir, lib_dir):
+    shutil.copy(jpeg_dir.joinpath("LICENSE.md"), licenses_dir.joinpath("libjpegturbo.txt"))
+
+def build_googletest(build_dir, include_dir, lib_dir, licenses_dir):
+    print("Building google test")
+    shutil.unpack_archive("googletest-5490beb.zip", str(build_dir))
+    src_dir = next(build_dir.glob("googletest-*")).resolve()
+
+    # CMake will install debug/release files here and this is where we copy our compiled library files / header files from
+    install_dir = src_dir.joinpath("install")
+
+    def build(build_type):        
+        # Build debug version of library
+        print(f"Building with CMAKE_BUILD_TYPE={build_type}")
+        build_dir = src_dir.joinpath("build_" + build_type.lower())
+        build_dir.mkdir()
+        subprocess.run(["cmake", "-GNMake Makefiles", 
+            "-DCMAKE_BUILD_TYPE=" + build_type, 
+            "-DCMAKE_INSTALL_PREFIX=" + str(install_dir), 
+            ".."], cwd=str(build_dir), check=True)
+        subprocess.run(["nmake"], cwd=str(build_dir), check=True)
+        subprocess.run(["nmake", "install"], cwd=str(build_dir), check=True)
+
+    build("DEBUG")
+    build("RELWITHDEBINFO")
+
+    # Copy header files
+    copy_tree(str(install_dir.joinpath("include")), str(include_dir))
+    copy_tree(str(install_dir.joinpath("lib")), str(lib_dir))
+
+    shutil.copy(src_dir.joinpath("LICENSE"), licenses_dir.joinpath("googletest.txt"))
+
+def build_openssl(build_dir, include_dir, lib_dir, licenses_dir):
     print("Building OpenSSL")
     # Keep in mind to update the OPENSSL_V property below as well
     shutil.unpack_archive("openssl-1.0.2n.tar.gz", str(build_dir))
@@ -157,10 +199,12 @@ def build_openssl(build_dir, include_dir, lib_dir):
     shutil.copy(openssl_dir.joinpath("tmp32/lib.pdb"), lib_dir)
 
     copy_tree(str(openssl_dir.joinpath("inc32")), str(include_dir))
+
+    shutil.copy(openssl_dir.joinpath("LICENSE"), licenses_dir.joinpath("openssl.txt"))
     
-def build_python(build_dir, include_dir, lib_dir, target_dir):
+def build_python(build_dir, include_dir, lib_dir, target_dir, licenses_dir):
     # Prerequisite
-    build_openssl(build_dir, include_dir, lib_dir)
+    build_openssl(build_dir, include_dir, lib_dir, licenses_dir)
 
     print("Building Python")
     shutil.unpack_archive("Python-2.7.14.tar.xz", str(build_dir))
@@ -254,6 +298,8 @@ Modules/atexitmodule.c""".split()
     )
 
     shutil.copytree(python_dir.joinpath("Lib"), target_dir.joinpath("python-lib"), ignore=ignore_lib_dirs)
+
+    shutil.copy(python_dir.joinpath("LICENSE"), licenses_dir.joinpath("python.txt"))
     
 if __name__ == "__main__":
     build_package()

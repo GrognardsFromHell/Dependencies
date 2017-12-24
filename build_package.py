@@ -72,7 +72,7 @@ def build_libjpegturbo(build_dir, include_dir, lib_dir):
 
     # Extract nasm
     shutil.unpack_archive("nasm-2.13.02-win32.zip", str(build_dir))
-    nasm_exe = next(build_dir.glob("nasm-*/nasm.exe"))
+    nasm_exe = next(build_dir.glob("nasm-*/nasm.exe")).resolve()
 
     # Cmake will install debug/release files here and this is where we copy our compiled library files / header files from
     install_dir = jpeg_dir.joinpath("install")

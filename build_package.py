@@ -12,6 +12,9 @@ def build_package():
 
     if build_dir.exists():
         shutil.rmtree(build_dir)
+    build_dir.mkdir()
+    build_dir = build_dir.resolve() # Try resolving after the path now exists
+    print("Using build_dir =", build_dir)
 
     target_dir = build_dir.joinpath("dependencies")
     target_dir.mkdir(parents=True)

@@ -25,6 +25,7 @@ def build_package():
     licenses_dir = target_dir.joinpath("licenses")
     licenses_dir.mkdir()
 
+    build_breakpad(build_dir, include_dir, lib_dir, licenses_dir)
     extract_zlib(build_dir, include_dir, lib_dir)
     extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir)
     extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir)
@@ -68,6 +69,53 @@ def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir):
 
     shutil.copy(dev_dir.joinpath("LICENSE.txt"), licenses_dir.joinpath("ffmpeg-license.txt"))
     shutil.copy(dev_dir.joinpath("README.txt"), licenses_dir.joinpath("ffmpeg-readme.txt"))
+
+def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
+    print("Building breakpad client")
+
+    print("Uncompressing breakpad")
+    breakpad_dir = build_dir.joinpath("breakpad")
+    shutil.unpack_archive("breakpad-9bcfabca.zip", str(breakpad_dir))
+
+    gyp_dir = build_dir.joinpath("gyp_dir")
+    shutil.unpack_archive("gyp-5e2b3dd.tar.gz", str(gyp_dir))
+
+    src_dir = breakpad_dir.joinpath("src")
+
+    def build(build_type):
+        print(f"Building with CMAKE_BUILD_TYPE={build_type}")        
+        cmake_build_dir = build_dir.joinpath("crash_reporting_" + build_type.lower())
+        shutil.copytree("crash_reporting", cmake_build_dir)
+        subprocess.run(["cmake", "-GNMake Makefiles", 
+            "-DCMAKE_BUILD_TYPE=" + build_type, 
+            "-DBREAKPAD_DIR=" + str(src_dir),
+            "."], cwd=str(cmake_build_dir), check=True)
+        subprocess.run(["nmake"], cwd=str(cmake_build_dir), check=True)
+
+        for f in cmake_build_dir.glob("*.lib"):
+            shutil.copy(f, lib_dir)
+        for f in cmake_build_dir.glob("*.pdb"):
+            shutil.copy(f, lib_dir)
+
+    build("DEBUG")
+    build("RELWITHDEBINFO")
+
+    shutil.copy(breakpad_dir.joinpath("LICENSE"), licenses_dir.joinpath("breakpad.txt"))
+    shutil.copy("crash_reporting/crash_reporting.h", include_dir)
+
+    # we rebuild the binaries to make use of the DIA SDK included in our version of visual studio
+    tools_dir = breakpad_dir.joinpath("src/tools/windows")
+    # Put Python 2.7 into the Path because gyp is incompatible with Python 3 (boo!)
+    gyp_env = os.environ.copy()
+    gyp_env["PATH"] = "C:\\Python27;" + os.environ["PATH"]
+    gyp_env["GYP_MSVS_VERSION"] = "2017"
+    subprocess.run([str(gyp_dir.joinpath("gyp")), "tools_windows.gyp"], env=gyp_env, shell=True, check=True, cwd=str(tools_dir))
+    subprocess.run(["msbuild", "tools_windows.sln", "/p:Configuration=Release", "/t:Clean,Build"], check=True, cwd=str(tools_dir))
+
+    bin_dir = build_dir.joinpath("dependencies/bin")
+    bin_dir.mkdir(exist_ok=True)
+    for bin_file in breakpad_dir.glob("src/tools/windows/Release/*.exe"):
+        shutil.copy(bin_file, bin_dir)
 
 def build_minhook(build_dir, include_dir, lib_dir, licenses_dir):
     print("Building minhook")

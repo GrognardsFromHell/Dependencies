@@ -38,7 +38,7 @@ def build_package():
     build_minhook(build_dir, include_dir, lib_dir, licenses_dir)
     build_googletest(build_dir, include_dir, lib_dir, licenses_dir)
     build_libjpegturbo(build_dir, include_dir, lib_dir, licenses_dir)
-    build_python(build_dir, include_dir, lib_dir, target_dir, licenses_dir)
+    build_python(build_dir, include_dir, lib_dir, bin_dir, target_dir, licenses_dir)
 
     # Compress dependencies archive using 7z (no 7z archive support)
     print("Compressing dependencies")
@@ -261,7 +261,7 @@ def build_googletest(build_dir, include_dir, lib_dir, licenses_dir):
 
     shutil.copy(src_dir.joinpath("LICENSE"), licenses_dir.joinpath("googletest.txt"))
 
-def build_openssl(build_dir, include_dir, lib_dir, licenses_dir):
+def build_openssl(build_dir, include_dir, lib_dir, bin_dir, licenses_dir):
     print("Building OpenSSL")
     # Keep in mind to update the OPENSSL_V property below as well
     shutil.unpack_archive("openssl-1.0.2n.tar.gz", str(build_dir))
@@ -276,6 +276,7 @@ def build_openssl(build_dir, include_dir, lib_dir, licenses_dir):
     subprocess.run("ms\\do_nasm", check=True, cwd=str(openssl_dir), shell=True)
     subprocess.run(["nmake", "-f", "ms\\nt.mak"], check=True, cwd=str(openssl_dir))
 
+    shutil.copy(openssl_dir.joinpath("out32/openssl.exe"), bin_dir)
     shutil.copy(openssl_dir.joinpath("out32/libeay32.lib"), lib_dir)
     shutil.copy(openssl_dir.joinpath("out32/ssleay32.lib"), lib_dir)
     shutil.copy(openssl_dir.joinpath("tmp32/lib.pdb"), lib_dir)
@@ -284,9 +285,9 @@ def build_openssl(build_dir, include_dir, lib_dir, licenses_dir):
 
     shutil.copy(openssl_dir.joinpath("LICENSE"), licenses_dir.joinpath("openssl.txt"))
     
-def build_python(build_dir, include_dir, lib_dir, target_dir, licenses_dir):
+def build_python(build_dir, include_dir, lib_dir, bin_dir, target_dir, licenses_dir):
     # Prerequisite
-    build_openssl(build_dir, include_dir, lib_dir, licenses_dir)
+    build_openssl(build_dir, include_dir, lib_dir, bin_dir, licenses_dir)
 
     print("Building Python")
     shutil.unpack_archive("Python-2.7.14.tar.xz", str(build_dir))

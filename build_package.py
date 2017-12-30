@@ -25,13 +25,16 @@ def build_package():
     lib_dir = target_dir.joinpath("lib")
     lib_dir.mkdir()
 
+    bin_dir = target_dir.joinpath("bin")
+    bin_dir.mkdir()
+
     licenses_dir = target_dir.joinpath("licenses")
     licenses_dir.mkdir()
 
     build_breakpad(build_dir, include_dir, lib_dir, licenses_dir)
-    extract_zlib(build_dir, include_dir, lib_dir)
+    build_zlib(build_dir, include_dir, lib_dir, bin_dir)
     extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir)
-    extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir)
+    extract_ffmpeg(build_dir, include_dir, lib_dir, bin_dir, licenses_dir)
     build_minhook(build_dir, include_dir, lib_dir, licenses_dir)
     build_googletest(build_dir, include_dir, lib_dir, licenses_dir)
     build_libjpegturbo(build_dir, include_dir, lib_dir, licenses_dir)
@@ -41,13 +44,39 @@ def build_package():
     print("Compressing dependencies")
     subprocess.run(["7za", "a", "dependencies.7z", "dependencies"], check=True, cwd=str(build_dir))
 
-def extract_zlib(build_dir, include_dir, lib_dir):
+def build_zlib(build_dir, include_dir, lib_dir, bin_dir):
     print("Adding zlib")
 
     shutil.unpack_archive("zlib-1.2.11.tar.gz", str(build_dir))
-    zlib_dir = next(build_dir.glob("zlib-*"))
-    for filename in ["zconf.h", "zlib.h"]:
-        shutil.copy(zlib_dir.joinpath(filename), include_dir)
+    src_dir = next(build_dir.glob("zlib-*"))
+
+    install_dir = build_dir.joinpath("zlib_install")
+
+    def build(build_type):
+        # Build debug version of library
+        print(f"Building with CMAKE_BUILD_TYPE={build_type}")
+        build_dir = src_dir.joinpath("build_" + build_type.lower())
+        build_dir.mkdir()
+        subprocess.run(["cmake", "-GNMake Makefiles", 
+            "-DCMAKE_BUILD_TYPE=" + build_type, 
+            "-DCMAKE_INSTALL_PREFIX=" + str(install_dir),
+            ".."], cwd=str(build_dir), check=True)
+        subprocess.run(["nmake"], cwd=str(build_dir), check=True)
+        subprocess.run(["nmake", "install"], cwd=str(build_dir), check=True)       
+
+        # Save the PDBs, those are not installed to the install_dir
+        for f in build_dir.glob("zlib*.pdb"):
+            shutil.copy(f, lib_dir)
+
+    build("DEBUG")
+    build("RELWITHDEBINFO")
+
+    for f in install_dir.glob("bin/*"):
+        shutil.copy(f, bin_dir)
+    for f in install_dir.glob("lib/*"):
+        shutil.copy(f, lib_dir)
+    for f in install_dir.glob("include/*"):
+        shutil.copy(f, include_dir)
 
 def extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir):
     print("Adding pybind11")
@@ -58,7 +87,7 @@ def extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir):
 
     shutil.copy(src_dir.joinpath("LICENSE"), licenses_dir.joinpath("pybind11.txt"))
 
-def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir):
+def extract_ffmpeg(build_dir, include_dir, lib_dir, bin_dir, licenses_dir):
     print("Adding ffmpeg")
     shutil.unpack_archive("ffmpeg-3.4.1-win32-dev.zip", str(build_dir))
     dev_dir = next(build_dir.glob("ffmpeg-*-dev"))
@@ -68,7 +97,8 @@ def extract_ffmpeg(build_dir, include_dir, lib_dir, target_dir, licenses_dir):
 
     shutil.unpack_archive("ffmpeg-3.4.1-win32-shared.zip", str(build_dir))
     shared_dir = next(build_dir.glob("ffmpeg-*-shared"))
-    copy_tree(str(shared_dir.joinpath("bin")), str(target_dir.joinpath("bin")))
+    for f in shared_dir.glob("bin/*"):
+        shutil.copy(f, bin_dir)
 
     shutil.copy(dev_dir.joinpath("LICENSE.txt"), licenses_dir.joinpath("ffmpeg-license.txt"))
     shutil.copy(dev_dir.joinpath("README.txt"), licenses_dir.joinpath("ffmpeg-readme.txt"))

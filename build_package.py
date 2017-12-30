@@ -50,6 +50,15 @@ def build_zlib(build_dir, include_dir, lib_dir, bin_dir):
     shutil.unpack_archive("zlib-1.2.11.tar.gz", str(build_dir))
     src_dir = next(build_dir.glob("zlib-*"))
 
+    # Force zlib to use the static CRT
+    with src_dir.joinpath("CMakeLists.txt").open("at") as fh:
+        fh.write("""
+        # Enforce use of static CRT
+foreach (flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELWITHDEBINFO)
+    string(REPLACE "/MD" "-MT" ${flag_var} "${${flag_var}}")
+endforeach()
+        """)
+
     install_dir = build_dir.joinpath("zlib_install")
 
     def build(build_type):

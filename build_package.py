@@ -33,7 +33,7 @@ def build_package():
 
     build_breakpad(build_dir, include_dir, lib_dir, licenses_dir)
     build_zlib(build_dir, include_dir, lib_dir, bin_dir)
-    extract_datpack(bin_dir)
+    extract_datpack(build_dir, bin_dir)
     extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir)
     extract_ffmpeg(build_dir, include_dir, lib_dir, bin_dir, licenses_dir)
     build_minhook(build_dir, include_dir, lib_dir, licenses_dir)

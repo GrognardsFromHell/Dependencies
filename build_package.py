@@ -33,6 +33,7 @@ def build_package():
 
     build_breakpad(build_dir, include_dir, lib_dir, licenses_dir)
     build_zlib(build_dir, include_dir, lib_dir, bin_dir)
+    extract_datpack(bin_dir)
     extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir)
     extract_ffmpeg(build_dir, include_dir, lib_dir, bin_dir, licenses_dir)
     build_minhook(build_dir, include_dir, lib_dir, licenses_dir)
@@ -44,6 +45,18 @@ def build_package():
     print("Compressing dependencies")
     subprocess.run(["7za", "a", "dependencies.7z", "dependencies"], check=True, cwd=str(build_dir))
 
+def extract_datpack(build_dir, bin_dir):
+    print("Adding datpack")
+    
+    shutil.unpack_archive("datpack.zip", str(build_dir))
+    
+    f = build_dir.joinpath("datpack/datpack.exe")
+    shutil.copy(f, str(bin_dir))
+    f = build_dir.joinpath("datpack/zlib.dll")
+    shutil.copy(f, str(bin_dir))
+    
+    
+    
 def build_zlib(build_dir, include_dir, lib_dir, bin_dir):
     print("Adding zlib")
 

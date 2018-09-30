@@ -103,7 +103,7 @@ endforeach()
 def extract_pybind11(build_dir, include_dir, lib_dir, licenses_dir):
     print("Adding pybind11")
 
-    shutil.unpack_archive("pybind11-2.2.1.tar.gz", str(build_dir))
+    shutil.unpack_archive("pybind11-2.2.4.tar.gz", str(build_dir))
     src_dir = next(build_dir.glob("pybind11-*"))
     shutil.copytree(src_dir.joinpath("include/pybind11"), include_dir.joinpath("pybind11"))
 

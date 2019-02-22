@@ -10,5 +10,7 @@ pool:
   vmImage: 'vs2017-win2016'
 
 steps:
+- checkout: self
+  lfs: true
 - script: python -u build_package.py
   displayName: 'Run a one-line script'

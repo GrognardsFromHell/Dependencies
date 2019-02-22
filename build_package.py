@@ -162,7 +162,7 @@ def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
     tools_dir = breakpad_dir.joinpath("src/tools/windows")
     # Put Python 2.7 into the Path because gyp is incompatible with Python 3 (boo!)
     gyp_env = os.environ.copy()
-    gyp_env["PATH"] = "C:\\Python27;" + os.environ["PATH"]
+    gyp_env["PATH"] = "C:\\Python27amd64;C:\\Python27;" + os.environ["PATH"]
     gyp_env["GYP_MSVS_VERSION"] = "2017"
     subprocess.run([str(gyp_dir.joinpath("gyp")), "tools_windows.gyp"], env=gyp_env, shell=True, check=True, cwd=str(tools_dir))
     # We are not using check=True here because this build will fail currently due to broken googletest dependencies

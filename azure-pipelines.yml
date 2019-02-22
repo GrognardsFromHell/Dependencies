@@ -12,5 +12,7 @@ pool:
 steps:
 - checkout: self
   lfs: true
-- script: python -u build_package.py
+- script: |
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+    python -u build_package.py
   displayName: 'Run a one-line script'

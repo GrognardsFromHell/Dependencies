@@ -13,6 +13,6 @@ steps:
 - checkout: self
   lfs: true
 - script: |
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
     python -u build_package.py
   displayName: 'Run a one-line script'

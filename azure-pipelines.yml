@@ -19,5 +19,5 @@ steps:
 - task: PublishPipelineArtifact@0
   inputs:
     artifactName: 'artifactName'
-    targetPath: 'src/MyWebApp/bin/Release/netcoreapp2.0/linux-x64/publish'
+    targetPath: 'dependencies.7z'
     

@@ -345,7 +345,7 @@ Modules/atexitmodule.c""".split()
             "python.vcxproj", 
             # These are now set in the vcxproj as well, except the Win10 SDK
             "/p:PlatformToolset=v142", # Force it to use Visual Studio 2019
-            "/p:WindowsTargetPlatformVersion=10.0.14393.0", # Force it to use the Win10 SDK
+            "/p:WindowsTargetPlatformVersion=10.0", # Force it to use the Win10 SDK
             "/p:OPENSSL_V=1.0.2n;Configuration=" + config], 
             check=True, cwd=str(python_build_dir))
 

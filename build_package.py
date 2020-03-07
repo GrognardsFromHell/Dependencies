@@ -133,7 +133,7 @@ def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
     shutil.unpack_archive("breakpad-9bcfabca.zip", str(breakpad_dir))
 
     gyp_dir = build_dir.joinpath("gyp_dir")
-    shutil.unpack_archive("gyp-5e2b3dd.tar.gz", str(gyp_dir))
+    shutil.unpack_archive("gyp-e87d37d.tar.gz", str(gyp_dir))
 
     src_dir = breakpad_dir.joinpath("src")
 
@@ -160,11 +160,7 @@ def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
 
     # we rebuild the binaries to make use of the DIA SDK included in our version of visual studio
     tools_dir = breakpad_dir.joinpath("src/tools/windows")
-    # Put Python 2.7 into the Path because gyp is incompatible with Python 3 (boo!)
-    gyp_env = os.environ.copy()
-    gyp_env["PATH"] = "C:\\Python27;" + os.environ["PATH"]
-    gyp_env["GYP_MSVS_VERSION"] = "2017"
-    subprocess.run([str(gyp_dir.joinpath("gyp")), "tools_windows.gyp"], env=gyp_env, shell=True, check=True, cwd=str(tools_dir))
+    subprocess.run([str(gyp_dir.joinpath("gyp")), "tools_windows.gyp"], shell=True, check=True, cwd=str(tools_dir))
     # We are not using check=True here because this build will fail currently due to broken googletest dependencies
     subprocess.run(["msbuild", "tools_windows.sln", "/p:Configuration=Release", "/p:Platform=Win32", "/t:Clean,Build"], check=False, cwd=str(tools_dir))
 
@@ -338,7 +334,7 @@ Modules/atexitmodule.c""".split()
         for f in python_dir.glob(glob_pattern):
             f.unlink()
 
-    # Overwrite project file which sets the platform toolkit to VS2017, and also adds the 
+    # Overwrite project file which sets the platform toolkit to VS2019, and also adds the 
     # C files needed for the modules we want to have embedded
     shutil.copyfile("python.vcxproj", python_build_dir.joinpath("python.vcxproj"))
 
@@ -348,7 +344,7 @@ Modules/atexitmodule.c""".split()
             "/m:" + str(multiprocessing.cpu_count()), 
             "python.vcxproj", 
             # These are now set in the vcxproj as well, except the Win10 SDK
-            "/p:PlatformToolset=v141", # Force it to use Visual Studio 2017
+            "/p:PlatformToolset=v142", # Force it to use Visual Studio 2019
             "/p:WindowsTargetPlatformVersion=10.0.14393.0", # Force it to use the Win10 SDK
             "/p:OPENSSL_V=1.0.2n;Configuration=" + config], 
             check=True, cwd=str(python_build_dir))

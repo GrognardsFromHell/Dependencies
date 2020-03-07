@@ -4,13 +4,11 @@ on:
   release:
     types: [created]
 
-name: Handle Release
 jobs:
   build-windows:
-    name: Build Windows
-    runs-on: windows-latest
-    
-    steps:
+   name: Build Windows
+   runs-on: windows-latest
+   steps:
     - uses: actions/checkout@v2
       with:
         lfs: true

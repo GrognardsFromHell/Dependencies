@@ -17,9 +17,21 @@ jobs:
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         python -u build_package.py
       shell: cmd
-    - name: Upload the artifacts
-      uses: skx/github-action-publish-binaries@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/upload-artifact@master
       with:
-        args: build\dependencies.7z
+          name: dependencies
+          path: build\dependencies.7z
+
+  upload-release-artifacts:
+    needs: build-windows
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: dependencies
+      - run: find
+      - name: Upload the artifacts
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: build\dependencies.7z

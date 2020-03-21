@@ -162,11 +162,11 @@ def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
     tools_dir = breakpad_dir.joinpath("src/tools/windows")
     subprocess.run([str(gyp_dir.joinpath("gyp")), "tools_windows.gyp"], shell=True, check=True, cwd=str(tools_dir))
     # We are not using check=True here because this build will fail currently due to broken googletest dependencies
-    subprocess.run(["msbuild", "tools_windows.sln", "/p:Configuration=Release", "/p:Platform=Win32", "/t:Clean,Build"], check=False, cwd=str(tools_dir))
+    subprocess.run(["devenv", "tools_windows.sln", "/build", "Release|Win32"], check=False, cwd=str(tools_dir))
 
     bin_dir = build_dir.joinpath("dependencies/bin")
     bin_dir.mkdir(exist_ok=True)
-    for bin_file in breakpad_dir.glob("src/tools/windows/Release/*.exe"):
+    for bin_file in breakpad_dir.glob("src/tools/windows/binaries/*.exe"):
         shutil.copy(bin_file, bin_dir)
 
 def build_minhook(build_dir, include_dir, lib_dir, licenses_dir):

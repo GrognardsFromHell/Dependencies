@@ -15,6 +15,7 @@ namespace google_breakpad {
 class InProcessCrashReporting {
 public:
 	InProcessCrashReporting(const std::wstring &minidump_folder,
+                            bool full_dump,
                             std::function<void(const std::wstring&)> crash_callback);
 	~InProcessCrashReporting();
 

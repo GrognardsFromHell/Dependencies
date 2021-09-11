@@ -2,6 +2,13 @@
 #include "crash_reporting.h"
 #include "client/windows/handler/exception_handler.h"
 
+// Large dump with all process memory.
+const MINIDUMP_TYPE FullDumpType = static_cast<MINIDUMP_TYPE>(
+    MiniDumpWithFullMemory |  // Full memory from process.
+    MiniDumpWithProcessThreadData |  // Get PEB and TEB.
+    MiniDumpWithHandleData |  // Get all handle information.
+    MiniDumpWithUnloadedModules);  // Get unloaded modules when available.
+
 struct InProcessCrashReporting::Detail {
 
     // Delegate back to breakpad
@@ -36,6 +43,7 @@ bool InProcessCrashReporting::Detail::HandleCrashCallbackDelegate(const wchar_t*
 }
 
 InProcessCrashReporting::InProcessCrashReporting(const std::wstring &minidump_folder,
+                                                 bool full_dump,
                                                  std::function<void(const std::wstring&)> crash_callback)
                                                  : crash_callback_(crash_callback)
 {
@@ -48,7 +56,10 @@ InProcessCrashReporting::InProcessCrashReporting(const std::wstring &minidump_fo
 		nullptr,
 		InProcessCrashReporting::Detail::HandleCrashCallbackDelegate,
 		this,
-		ExceptionHandler::HANDLER_ALL
+		ExceptionHandler::HANDLER_ALL,
+    full_dump ? FullDumpType : MiniDumpNormal,
+    (HANDLE) nullptr,
+    nullptr
 	);
 
 }

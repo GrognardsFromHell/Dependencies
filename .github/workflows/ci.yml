@@ -13,7 +13,7 @@ jobs:
         lfs: true
     - name: Build
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         python -u build_package.py
       shell: cmd
     - uses: actions/upload-artifact@master

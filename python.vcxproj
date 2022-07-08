@@ -14,7 +14,7 @@
     <ProjectGuid>{2E58F113-DEEF-4B4B-8A7F-9208C18B5481}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>PythonEmbed</RootNamespace>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

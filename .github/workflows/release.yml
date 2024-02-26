@@ -17,7 +17,7 @@ jobs:
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
         python -u build_package.py
       shell: cmd
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v4
       with:
           name: dependencies
           path: build\dependencies.7z
@@ -26,7 +26,7 @@ jobs:
     needs: build-windows
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: dependencies
       - run: find

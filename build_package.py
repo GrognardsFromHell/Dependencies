@@ -130,14 +130,11 @@ def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
 
     print("Uncompressing breakpad")
     breakpad_dir = build_dir.joinpath("breakpad")
-    shutil.unpack_archive("breakpad-9bcfabca.zip", str(breakpad_dir))
-
-    gyp_dir = build_dir.joinpath("gyp_dir")
-    shutil.unpack_archive("gyp-e87d37d.tar.gz", str(gyp_dir))
+    shutil.unpack_archive("breakpad-e92bea3.zip", str(breakpad_dir))
 
     src_dir = breakpad_dir.joinpath("src")
 
-    def build(build_type):
+    def build(build_type, copy_binaries):
         print(f"Building with CMAKE_BUILD_TYPE={build_type}")        
         cmake_build_dir = build_dir.joinpath("crash_reporting_" + build_type.lower())
         shutil.copytree("crash_reporting", cmake_build_dir)
@@ -152,22 +149,18 @@ def build_breakpad(build_dir, include_dir, lib_dir, licenses_dir):
         for f in cmake_build_dir.glob("*.pdb"):
             shutil.copy(f, lib_dir)
 
-    build("DEBUG")
-    build("RELWITHDEBINFO")
+        # Only copy binaries for release
+        if copy_binaries:
+            bin_dir = build_dir.joinpath("dependencies/bin")
+            bin_dir.mkdir(exist_ok=True)
+            for f in cmake_build_dir.glob("*.exe"):
+                shutil.copy(f, bin_dir)
+
+    build("DEBUG", False)
+    build("RELWITHDEBINFO", True)
 
     shutil.copy(breakpad_dir.joinpath("LICENSE"), licenses_dir.joinpath("breakpad.txt"))
     shutil.copy("crash_reporting/crash_reporting.h", include_dir)
-
-    # we rebuild the binaries to make use of the DIA SDK included in our version of visual studio
-    tools_dir = breakpad_dir.joinpath("src/tools/windows")
-    subprocess.run([str(gyp_dir.joinpath("gyp")), "tools_windows.gyp"], shell=True, check=True, cwd=str(tools_dir))
-    # We are not using check=True here because this build will fail currently due to broken googletest dependencies
-    subprocess.run(["devenv", "tools_windows.sln", "/build", "Release|Win32"], check=False, cwd=str(tools_dir))
-
-    bin_dir = build_dir.joinpath("dependencies/bin")
-    bin_dir.mkdir(exist_ok=True)
-    for bin_file in breakpad_dir.glob("src/tools/windows/binaries/*.exe"):
-        shutil.copy(bin_file, bin_dir)
 
 def build_minhook(build_dir, include_dir, lib_dir, licenses_dir):
     print("Building minhook")
